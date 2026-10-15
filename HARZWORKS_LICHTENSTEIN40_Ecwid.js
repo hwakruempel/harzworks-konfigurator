@@ -1,4 +1,4 @@
-/* HARZWORKS LICHTENSTEIN 40 — Ecwid storefront prototype, 2026 */
+/* HARZWORKS LICHTENSTEIN 40 — Ecwid storefront updated, 2026 */
 (function(){'use strict';
  if(window.__HW_L40_PREVIEW__)return;window.__HW_L40_PREVIEW__=true;
  const PRODUCT_ID='871120612', MONTHS=['JANUAR','FEBRUAR','MÄRZ','APRIL','MAI','JUNI','JULI','AUGUST','SEPTEMBER','OKTOBER','NOVEMBER','DEZEMBER'];
@@ -6,34 +6,103 @@
  let lastPage='', raf=0;
  function correctProduct(){const url=location.href;return url.indexOf('-p'+PRODUCT_ID)>=0 || /(?:[?#&]product=|[?#&]id=)871120612(?:$|[&#])/i.test(url);}
  function clean(s){return (s||'').replace(/\s+/g,' ').trim();}
+ function isVisible(el){const st=window.getComputedStyle(el);const r=el.getBoundingClientRect();return st.display!=='none'&&st.visibility!=='hidden'&&r.width>40&&r.height>40;}
  function field(label){
-  // Ecwid uses labels and blocks in slightly different arrangements across storefront versions.
   const nodes=document.querySelectorAll('label,.form-control__label,.details-product-option__title,.details-product-option__name,span,div');
   for(const node of nodes){if(node.children.length>4 || clean(node.textContent)!==label)continue;
    if(node.matches('label') && node.htmlFor){const el=document.getElementById(node.htmlFor);if(el&&el.matches('input,textarea'))return el;}
-   let par=node;for(let i=0;i<5&&par;i++,par=par.parentElement){
+   let par=node;for(let i=0;i<6&&par;i++,par=par.parentElement){
     const ins=[...par.querySelectorAll('input[type=text],input:not([type]),textarea')].filter(e=>e.offsetParent!==null);
     if(ins.length===1)return ins[0];
    }
   }
   return null;
  }
- function parsedDate(s){s=clean(s);let m=s.match(/^(\d{1,2})[.\-/](\d{1,2})[.\-/](\d{4})$/);if(m){const d=+m[1],mon=+m[2];if(d>=1&&d<=31&&mon>=1&&mon<=12)return d+'. '+MONTHS[mon-1]+' '+m[3];}m=s.match(/^(\d{4})-(\d{2})-(\d{2})$/);if(m){const mon=+m[2];if(mon>=1&&mon<=12)return Number(m[3])+'. '+MONTHS[mon-1]+' '+m[1];}return s.toLocaleUpperCase('de-DE');}
- function previewElement(){const wrapper=document.createElement('section');wrapper.className='hw-l40-preview';wrapper.innerHTML=`<div class="hw-l40-heading">Deine persönliche Gravur · Live-Vorschau</div><div class="hw-l40-viewport"><div class="hw-l40-zoomable"><svg class="hw-l40-svg" viewBox="0 0 1254 1254" xmlns="http://www.w3.org/2000/svg" aria-label="Personalisierte Uhr"><image href="${BACKGROUND}" width="1254" height="1254"/><text class="hw-l40-initials" x="375" y="790" text-anchor="middle">A&amp;M</text><text class="hw-l40-names" x="770" y="787" text-anchor="middle">Anna &amp; Markus</text><text class="hw-l40-date" x="770" y="849" text-anchor="middle">14. SEPTEMBER 2024</text></svg></div></div><div class="hw-l40-actions"><button type="button" data-zoom="-">−</button><span class="hw-l40-percent">100 %</span><button type="button" data-zoom="+">+</button><button type="button" data-zoom="reset">Zurücksetzen</button></div><p class="hw-l40-notice">Vorschau einer möglichen Gravur. Holzstruktur und fertige Gravur können abweichen. Die Angaben aus den Ecwid-Feldern werden für die Bestellung verwendet.</p>`;
+ function parsedDate(s){
+   s=clean(s);
+   let m=s.match(/^(\d{1,2})[.\-/](\d{1,2})[.\-/](\d{4})$/);
+   if(m){const d=+m[1],mon=+m[2];if(d>=1&&d<=31&&mon>=1&&mon<=12)return d+'. '+MONTHS[mon-1]+' '+m[3];}
+   m=s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+   if(m){const mon=+m[2];if(mon>=1&&mon<=12)return Number(m[3])+'. '+MONTHS[mon-1]+' '+m[1];}
+   return s ? s.toLocaleUpperCase('de-DE') : '';
+ }
+ function previewElement(){
+  const wrapper=document.createElement('section');
+  wrapper.className='hw-l40-preview';
+  wrapper.innerHTML=`<div class="hw-l40-heading">Deine persönliche Gravur · Live-Vorschau</div><div class="hw-l40-viewport"><div class="hw-l40-zoomable"><svg class="hw-l40-svg" viewBox="0 0 1254 1254" xmlns="http://www.w3.org/2000/svg" aria-label="Personalisierte Uhr"><image href="${BACKGROUND}" width="1254" height="1254"/><text class="hw-l40-initials" x="377" y="787" text-anchor="middle" transform="rotate(-14 377 787)">A&amp;M</text><text class="hw-l40-names" x="782" y="793" text-anchor="middle">Anna &amp; Markus</text><text class="hw-l40-date" x="780" y="852" text-anchor="middle">14. SEPTEMBER 2024</text></svg></div></div><div class="hw-l40-actions"><button type="button" data-zoom="-">−</button><span class="hw-l40-percent">100 %</span><button type="button" data-zoom="+">+</button><button type="button" data-zoom="reset">Zurücksetzen</button></div><p class="hw-l40-notice">Vorschau einer möglichen Gravur. Holzstruktur und fertige Gravur können leicht abweichen. Für die Bestellung werden die Angaben aus den Ecwid-Feldern verwendet.</p>`;
   let zoom=1;const zoomable=wrapper.querySelector('.hw-l40-zoomable');
-  wrapper.querySelectorAll('[data-zoom]').forEach(b=>b.addEventListener('click',()=>{const action=b.dataset.zoom;zoom=action==='reset'?1:Math.max(1,Math.min(2.5,zoom+(action==='+'?.25:-.25)));zoomable.style.transform=`scale(${zoom})`;wrapper.querySelector('.hw-l40-percent').textContent=Math.round(zoom*100)+' %';}));return wrapper;
+  wrapper.querySelectorAll('[data-zoom]').forEach(b=>b.addEventListener('click',()=>{const action=b.dataset.zoom;zoom=action==='reset'?1:Math.max(1,Math.min(2.5,zoom+(action==='+'?.25:-.25)));zoomable.style.transform=`scale(${zoom})`;wrapper.querySelector('.hw-l40-percent').textContent=Math.round(zoom*100)+' %';}));
+  return wrapper;
  }
- function render(box,els){const a=clean(els[0].value)||'Anna',b=clean(els[1].value)||'Markus',d=parsedDate(els[2].value)||'14. SEPTEMBER 2024';const names=box.querySelector('.hw-l40-names'),date=box.querySelector('.hw-l40-date');names.textContent=a+' & '+b;date.textContent=d;box.querySelector('.hw-l40-initials').textContent=(a[0]||'A').toLocaleUpperCase('de-DE')+'&'+(b[0]||'M').toLocaleUpperCase('de-DE');try{names.setAttribute('font-size',Math.min(73,73*555/Math.max(1,names.getComputedTextLength())));date.setAttribute('font-size',Math.min(29,29*440/Math.max(1,date.getComputedTextLength())));}catch(e){}
+ function render(box,els){
+   const a=clean(els[0].value)||'Anna',b=clean(els[1].value)||'Markus',d=parsedDate(els[2].value)||'14. SEPTEMBER 2024';
+   const names=box.querySelector('.hw-l40-names'),date=box.querySelector('.hw-l40-date'),ini=box.querySelector('.hw-l40-initials');
+   names.textContent=a+' & '+b; date.textContent=d;
+   ini.textContent=(a[0]||'A').toLocaleUpperCase('de-DE')+'&'+(b[0]||'M').toLocaleUpperCase('de-DE');
+   try{
+     names.setAttribute('font-size', Math.min(96, 96*600/Math.max(1,names.getComputedTextLength())));
+     date.setAttribute('font-size', Math.min(30, 30*450/Math.max(1,date.getComputedTextLength())));
+     ini.setAttribute('font-size', Math.min(48, 48*150/Math.max(1,ini.getComputedTextLength())));
+   }catch(e){}
  }
- function mount(){const current=correctProduct();let box=document.querySelector('.hw-l40-preview');if(!current){if(box)box.remove();return;}let els=['Name 1','Name 2','Hochzeitsdatum'].map(field);if(els.some(x=>!x))return;
-  if(!box){box=previewElement();const group=els[0].closest('.details-product-option') || els[0].parentElement?.parentElement || els[0];group.parentElement.insertBefore(box,group);}
-  els.forEach(el=>{if(el.__hw_l40_handler)return;el.__hw_l40_handler=()=>render(box,els);el.addEventListener('input',el.__hw_l40_handler);el.addEventListener('change',el.__hw_l40_handler);});render(box,els);
+ function findHeroTarget(){
+   const selectorList=[
+     '[class*="gallery"]','[class*="Gallery"]','[class*="product-gallery"]','[class*="ProductGallery"]',
+     '.details-gallery','.product-details__media','.product-details__gallery','.ec-product-gallery'
+   ];
+   for(const sel of selectorList){
+     const items=[...document.querySelectorAll(sel)].filter(isVisible);
+     for(const el of items){if(el.querySelector('img')) return el;}
+   }
+   const imgs=[...document.images].filter(img=>{
+     if(!isVisible(img)) return false;
+     const r=img.getBoundingClientRect();
+     return r.width>260 && r.height>260 && r.top < window.innerHeight*1.2;
+   }).sort((a,b)=>b.getBoundingClientRect().width*b.getBoundingClientRect().height - a.getBoundingClientRect().width*a.getBoundingClientRect().height);
+   const img=imgs[0];
+   if(!img) return null;
+   let target=img;
+   for(let i=0;i<4 && target.parentElement;i++){
+     const p=target.parentElement, pr=p.getBoundingClientRect(), ir=img.getBoundingClientRect();
+     if(pr.width>=ir.width*0.95 && pr.height>=ir.height*0.95 && pr.width<ir.width*1.8 && pr.height<ir.height*1.8) target=p;
+     else break;
+   }
+   return target;
+ }
+ function mount(){
+   const current=correctProduct();
+   let box=document.querySelector('.hw-l40-preview');
+   if(!current){if(box)box.remove();document.querySelectorAll('.hw-l40-hidden-original').forEach(el=>el.classList.remove('hw-l40-hidden-original'));return;}
+   let els=['Name 1','Name 2','Hochzeitsdatum'].map(field);
+   if(els.some(x=>!x)) return;
+   let heroTarget=findHeroTarget();
+   if(!box){
+     box=previewElement();
+     if(heroTarget && heroTarget.parentElement){
+       box.classList.add('hw-l40-preview--hero');
+       heroTarget.classList.add('hw-l40-hidden-original');
+       heroTarget.parentElement.insertBefore(box, heroTarget);
+     } else {
+       const group=els[0].closest('.details-product-option') || els[0].parentElement?.parentElement || els[0];
+       box.classList.add('hw-l40-preview--fallback');
+       group.parentElement.insertBefore(box, group);
+     }
+   } else if(box.classList.contains('hw-l40-preview--fallback') && heroTarget && heroTarget.parentElement){
+     box.classList.remove('hw-l40-preview--fallback');
+     box.classList.add('hw-l40-preview--hero');
+     heroTarget.classList.add('hw-l40-hidden-original');
+     heroTarget.parentElement.insertBefore(box, heroTarget);
+   } else if(box.classList.contains('hw-l40-preview--hero') && heroTarget){
+     heroTarget.classList.add('hw-l40-hidden-original');
+   }
+   els.forEach(el=>{if(el.__hw_l40_handler)return;el.__hw_l40_handler=()=>render(box,els);el.addEventListener('input',el.__hw_l40_handler);el.addEventListener('change',el.__hw_l40_handler);});
+   render(box,els);
  }
  function schedule(){cancelAnimationFrame(raf);raf=requestAnimationFrame(mount);}
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',schedule);else schedule();
- const observer=new MutationObserver(()=>{if(correctProduct()&&!document.querySelector('.hw-l40-preview'))schedule();else if(!correctProduct()&&document.querySelector('.hw-l40-preview'))schedule();});observer.observe(document.documentElement,{childList:true,subtree:true});
+ const observer=new MutationObserver(()=>{if(correctProduct())schedule();else if(document.querySelector('.hw-l40-preview'))schedule();});
+ observer.observe(document.documentElement,{childList:true,subtree:true});
  window.addEventListener('popstate',schedule);window.addEventListener('hashchange',schedule);
  if(window.Ecwid&&Ecwid.OnPageLoaded)Ecwid.OnPageLoaded.add(schedule);
- // Ecwid may initialize after this JS file; a lightweight check covers that case.
- setInterval(()=>{if(location.href!==lastPage){lastPage=location.href;schedule();}else if(correctProduct()&&!document.querySelector('.hw-l40-preview'))schedule();},1600);
-})();
+ setInterval(()=>{if(location.href!==lastPage){lastPage=location.href;schedule();}else if(correctProduct() && !document.querySelector('.hw-l40-preview')){schedule();}},1600);
+ })();

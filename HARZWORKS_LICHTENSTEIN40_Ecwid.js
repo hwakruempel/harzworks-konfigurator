@@ -1,4 +1,4 @@
-/* HARZWORKS LICHTENSTEIN 40 – ausklappbare Gravurvorschau, Version 6 */
+/* HARZWORKS LICHTENSTEIN 40 – ausklappbare Gravurvorschau, Version 10: selected calligraphy & +15% date */
 (function () {
   'use strict';
   if (window.__HW_L40_V6__) return;
@@ -27,7 +27,7 @@
       let parent = el;
       for (let i=0; i<5 && parent; i++, parent=parent.parentElement) {
         const matches = [...parent.querySelectorAll(
-          'input[type="text"],input:not([type]),textarea')]
+          'input[type="text"],input[type="date"],input:not([type]),textarea')]
           .filter(input => input.getClientRects().length);
         if (matches.length === 1) return matches[0];
       }
@@ -56,13 +56,41 @@
       }
     } catch(e) {}
   }
+  function setCalligraphy(node, first, second) {
+    // Enlarged initials are kept as actual text so every entered name works.
+    const ns = 'http://www.w3.org/2000/svg';
+    const part = (content, initial) => {
+      const t = document.createElementNS(ns, 'tspan');
+      if (initial) t.setAttribute('class', 'hw-l40-capital');
+      t.textContent = content;
+      node.appendChild(t);
+    };
+    node.replaceChildren();
+    part(first.charAt(0).toLocaleUpperCase('de-DE'), true);
+    part(first.slice(1), false);
+    part(' & ', false);
+    part(second.charAt(0).toLocaleUpperCase('de-DE'), true);
+    part(second.slice(1), false);
+    node.setAttribute('font-size', '99');
+    node.removeAttribute('textLength');
+    node.removeAttribute('lengthAdjust');
+    // Resize only the complete line when it is longer than the engraving area.
+    // Do not recalculate based on an already scaled measurement.
+    try {
+      if (node.getComputedTextLength() > 585) {
+        node.setAttribute('textLength', '585');
+        node.setAttribute('lengthAdjust', 'spacingAndGlyphs');
+      }
+    } catch(e) {}
+  }
   function update() {
     if (!root || fields.length !== 3) return;
     const a = tidy(fields[0].value) || 'Anna';
     const b = tidy(fields[1].value) || 'Markus';
     const d = formattedDate(fields[2].value) || 'HOCHZEITSDATUM EINGEBEN';
-    fitText(root.querySelector('.hw-l40-names'), `${a} & ${b}`, 88, 590);
-    fitText(root.querySelector('.hw-l40-date'), d, 28, 430);
+    setCalligraphy(root.querySelector('.hw-l40-names'), a, b);
+    // Same Montserrat date lettering as before, increased 15% from 32 to 36.8.
+    fitText(root.querySelector('.hw-l40-date'), d, 36.8, 435);
     fitText(root.querySelector('.hw-l40-initials'),
       `${a[0].toLocaleUpperCase('de-DE')}&${b[0].toLocaleUpperCase('de-DE')}`, 49, 112);
   }
@@ -71,7 +99,7 @@
     el.className = 'hw-l40-disclosure';
     el.innerHTML = `
       <button type="button" class="hw-l40-toggle" aria-expanded="false">
-        <span class="hw-l40-toggle-label">Deine Gravur ansehen</span>
+        <span class="hw-l40-toggle-label"><span class="hw-l40-eye" aria-hidden="true">◉</span> Deine Gravur ansehen</span>
         <span class="hw-l40-chevron" aria-hidden="true">⌄</span>
       </button>
       <div class="hw-l40-panel" hidden>
@@ -84,9 +112,9 @@
             <text class="hw-l40-initials" x="377" y="785" text-anchor="middle"
                   transform="rotate(-12 377 785)" font-size="49">A&amp;M</text>
             <text class="hw-l40-names" x="774" y="795" text-anchor="middle"
-                  font-size="88">Anna &amp; Markus</text>
+                  font-size="99">Anna &amp; Markus</text>
             <text class="hw-l40-date" x="774" y="853" text-anchor="middle"
-                  font-size="28">14. SEPTEMBER 2024</text>
+                  font-size="36.8">14. SEPTEMBER 2024</text>
           </svg>
         </div></div>
         <div class="hw-l40-actions">
@@ -218,6 +246,8 @@
     fields.forEach(input => {
       input.addEventListener('input', update);
       input.addEventListener('change', update);
+      // Kalenderauswahl kann über den Browser auch erst beim Schließen aktualisiert werden.
+      input.addEventListener('blur', update);
     });
     update();
   }

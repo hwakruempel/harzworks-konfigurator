@@ -1,5 +1,5 @@
 /* HARZWORKS LICHTENSTEIN 40 – Klappvorschau V6 */
-@import url('https://fonts.googleapis.com/css2?family=Great+Vibes&family=Cormorant+Garamond:wght@400;500&family=Montserrat:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;500;600;700&family=Cormorant+Garamond:wght@400;500&family=Montserrat:wght@400;500;600&display=swap');
 .hw-l40-disclosure{width:100%;max-width:640px;margin:16px 0 20px;box-sizing:border-box;font-family:Montserrat,Arial,sans-serif;color:#252525}
 .hw-l40-disclosure *{box-sizing:border-box}
 .hw-l40-toggle{display:flex;justify-content:space-between;align-items:center;gap:12px;width:100%;min-height:48px;padding:12px 16px;background:#242424;color:#fff;border:1px solid #242424;border-radius:5px;font:600 14px/1.4 Montserrat,Arial,sans-serif;cursor:pointer;text-align:left}
@@ -12,7 +12,7 @@
 .hw-l40-viewport{width:100%;aspect-ratio:1;overflow:hidden;background:white}
 .hw-l40-zoomable{width:100%;height:100%;transform-origin:50% 50%;transition:transform .16s ease}
 .hw-l40-svg{display:block;width:100%;height:100%}
-.hw-l40-names{font-family:'Great Vibes','Apple Chancery',cursive;font-weight:400;fill:#26140d}
+.hw-l40-names{font-family:'Dancing Script','Apple Chancery',cursive;font-weight:400;fill:#26140d}
 .hw-l40-initials{font-family:'Cormorant Garamond',Georgia,serif;font-style:italic;fill:#2b170f}
 .hw-l40-date{font-family:Montserrat,Arial,sans-serif;font-weight:500;letter-spacing:2.5px;fill:#2c1a13}
 .hw-l40-actions{display:flex;justify-content:center;align-items:center;gap:12px;padding:10px 4px;flex-wrap:wrap}
@@ -125,3 +125,6 @@ html body .hw-l40-disclosure button.hw-l40-toggle .hw-l40-chevron {font-size:24p
 
 /* V10: selected calligraphy option 2 - enlarged A and M inside SVG */
 .hw-l40-names .hw-l40-capital {font-size:1.27em !important;}
+
+/* V12: Namen ausdrücklich in Dancing Script, Datum unverändert. */
+.hw-l40-disclosure .hw-l40-names, .hw-l40-lightbox .hw-l40-names { font-family:'Dancing Script',cursive !important; font-weight:400 !important; }

@@ -14,3 +14,12 @@
 .hw-l40-preview--v4 .hw-l40-percent{font:12px Montserrat,Arial,sans-serif}
 .hw-l40-preview--v4 .hw-l40-notice{font:11px/1.5 Montserrat,Arial,sans-serif;text-align:center;color:#777;margin:0;padding:5px 8px 12px}
 @media(max-width:600px){.hw-l40-preview--v4 .hw-l40-heading{font-size:12px}}
+
+/* Disable Ecwid's original hover lens where the customized product image is shown. */
+.hw-l40-gallery-active [class*="zoom"],
+.hw-l40-gallery-active [class*="Zoom"],
+.hw-l40-gallery-active [class*="magnifier"],
+.hw-l40-gallery-active [class*="Magnifier"]{display:none!important;pointer-events:none!important}
+.hw-l40-gallery-active .hw-l40-preview{pointer-events:auto!important}
+.hw-l40-gallery-active .hw-l40-preview .hw-l40-viewport{cursor:default}
+@media(max-width:767px){.hw-l40-preview--v4{max-width:100%!important}.hw-l40-fallback{margin-bottom:16px}}

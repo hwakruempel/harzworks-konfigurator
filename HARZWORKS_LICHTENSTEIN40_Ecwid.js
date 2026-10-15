@@ -1,4 +1,4 @@
-/* HARZWORKS LICHTENSTEIN 40 — Ecwid storefront updated, 2026 */
+/* HARZWORKS LICHTENSTEIN 40 — Ecwid storefront updated v3, 2026 */
 (function(){'use strict';
  if(window.__HW_L40_PREVIEW__)return;window.__HW_L40_PREVIEW__=true;
  const PRODUCT_ID='871120612', MONTHS=['JANUAR','FEBRUAR','MÄRZ','APRIL','MAI','JUNI','JULI','AUGUST','SEPTEMBER','OKTOBER','NOVEMBER','DEZEMBER'];
@@ -29,74 +29,123 @@
  function previewElement(){
   const wrapper=document.createElement('section');
   wrapper.className='hw-l40-preview';
-  wrapper.innerHTML=`<div class="hw-l40-heading">Deine persönliche Gravur · Live-Vorschau</div><div class="hw-l40-viewport"><div class="hw-l40-zoomable"><svg class="hw-l40-svg" viewBox="0 0 1254 1254" xmlns="http://www.w3.org/2000/svg" aria-label="Personalisierte Uhr"><image href="${BACKGROUND}" width="1254" height="1254"/><text class="hw-l40-initials" x="377" y="787" text-anchor="middle" transform="rotate(-14 377 787)">A&amp;M</text><text class="hw-l40-names" x="782" y="793" text-anchor="middle">Anna &amp; Markus</text><text class="hw-l40-date" x="780" y="852" text-anchor="middle">14. SEPTEMBER 2024</text></svg></div></div><div class="hw-l40-actions"><button type="button" data-zoom="-">−</button><span class="hw-l40-percent">100 %</span><button type="button" data-zoom="+">+</button><button type="button" data-zoom="reset">Zurücksetzen</button></div><p class="hw-l40-notice">Vorschau einer möglichen Gravur. Holzstruktur und fertige Gravur können leicht abweichen. Für die Bestellung werden die Angaben aus den Ecwid-Feldern verwendet.</p>`;
+  wrapper.innerHTML=`<div class="hw-l40-heading">Deine persönliche Gravur · Live-Vorschau</div><div class="hw-l40-viewport"><div class="hw-l40-zoomable"><svg class="hw-l40-svg" viewBox="0 0 1254 1254" xmlns="http://www.w3.org/2000/svg" aria-label="Personalisierte Uhr"><image href="${BACKGROUND}" width="1254" height="1254"/><text class="hw-l40-initials" x="377" y="787" text-anchor="middle" transform="rotate(-13 377 787)">A&amp;M</text><text class="hw-l40-names" x="782" y="793" text-anchor="middle">Anna &amp; Markus</text><text class="hw-l40-date" x="780" y="852" text-anchor="middle">14. SEPTEMBER 2024</text></svg></div></div><div class="hw-l40-actions"><button type="button" data-zoom="-">−</button><span class="hw-l40-percent">100 %</span><button type="button" data-zoom="+">+</button><button type="button" data-zoom="reset">Zurücksetzen</button></div><p class="hw-l40-notice">Vorschau einer möglichen Gravur. Holzstruktur und fertige Gravur können leicht abweichen. Für die Bestellung werden die Angaben aus den Ecwid-Feldern verwendet.</p>`;
   let zoom=1;const zoomable=wrapper.querySelector('.hw-l40-zoomable');
-  wrapper.querySelectorAll('[data-zoom]').forEach(b=>b.addEventListener('click',()=>{const action=b.dataset.zoom;zoom=action==='reset'?1:Math.max(1,Math.min(2.5,zoom+(action==='+'?.25:-.25)));zoomable.style.transform=`scale(${zoom})`;wrapper.querySelector('.hw-l40-percent').textContent=Math.round(zoom*100)+' %';}));
+  wrapper.querySelectorAll('[data-zoom]').forEach(b=>b.addEventListener('click',()=>{
+    const action=b.dataset.zoom;
+    zoom=action==='reset'?1:Math.max(1,Math.min(2.5,zoom+(action==='+'?.25:-.25)));
+    zoomable.style.transform=`scale(${zoom})`;
+    wrapper.querySelector('.hw-l40-percent').textContent=Math.round(zoom*100)+' %';
+  }));
   return wrapper;
  }
+ function fitText(textNode,maxWidth,baseSize,minSize){
+   textNode.removeAttribute('textLength');
+   textNode.removeAttribute('lengthAdjust');
+   textNode.setAttribute('font-size', String(baseSize));
+   try {
+     const w=textNode.getComputedTextLength();
+     if(!w || !isFinite(w)) return;
+     if(w>maxWidth){
+       const scaled=Math.max(minSize, Math.floor(baseSize*maxWidth/w));
+       textNode.setAttribute('font-size', String(scaled));
+       if(scaled===minSize){
+         textNode.setAttribute('textLength', String(maxWidth));
+         textNode.setAttribute('lengthAdjust','spacingAndGlyphs');
+       }
+     }
+   } catch(e){}
+ }
  function render(box,els){
+   if(!box) return;
    const a=clean(els[0].value)||'Anna',b=clean(els[1].value)||'Markus',d=parsedDate(els[2].value)||'14. SEPTEMBER 2024';
    const names=box.querySelector('.hw-l40-names'),date=box.querySelector('.hw-l40-date'),ini=box.querySelector('.hw-l40-initials');
-   names.textContent=a+' & '+b; date.textContent=d;
+   names.textContent=a+' & '+b;
+   date.textContent=d;
    ini.textContent=(a[0]||'A').toLocaleUpperCase('de-DE')+'&'+(b[0]||'M').toLocaleUpperCase('de-DE');
-   try{
-     names.setAttribute('font-size', Math.min(96, 96*600/Math.max(1,names.getComputedTextLength())));
-     date.setAttribute('font-size', Math.min(30, 30*450/Math.max(1,date.getComputedTextLength())));
-     ini.setAttribute('font-size', Math.min(48, 48*150/Math.max(1,ini.getComputedTextLength())));
-   }catch(e){}
+   fitText(names, 580, 94, 62);
+   fitText(date, 400, 30, 24);
+   fitText(ini, 118, 50, 38);
  }
  function findHeroTarget(){
-   const selectorList=[
-     '[class*="gallery"]','[class*="Gallery"]','[class*="product-gallery"]','[class*="ProductGallery"]',
-     '.details-gallery','.product-details__media','.product-details__gallery','.ec-product-gallery'
-   ];
-   for(const sel of selectorList){
-     const items=[...document.querySelectorAll(sel)].filter(isVisible);
-     for(const el of items){if(el.querySelector('img')) return el;}
-   }
+   const productRoot = document.querySelector('.grid-product__wrap, .details-product-purchase, .product-details, .ec-size .product-details, .details') || document.body;
    const imgs=[...document.images].filter(img=>{
      if(!isVisible(img)) return false;
      const r=img.getBoundingClientRect();
-     return r.width>260 && r.height>260 && r.top < window.innerHeight*1.2;
+     if(r.width<260 || r.height<260) return false;
+     if(r.top > window.innerHeight*1.5) return false;
+     if(!productRoot.contains(img)) return false;
+     return true;
    }).sort((a,b)=>b.getBoundingClientRect().width*b.getBoundingClientRect().height - a.getBoundingClientRect().width*a.getBoundingClientRect().height);
    const img=imgs[0];
    if(!img) return null;
    let target=img;
-   for(let i=0;i<4 && target.parentElement;i++){
-     const p=target.parentElement, pr=p.getBoundingClientRect(), ir=img.getBoundingClientRect();
-     if(pr.width>=ir.width*0.95 && pr.height>=ir.height*0.95 && pr.width<ir.width*1.8 && pr.height<ir.height*1.8) target=p;
+   for(let i=0;i<3 && target.parentElement;i++){
+     const p=target.parentElement, pr=p.getBoundingClientRect(), tr=target.getBoundingClientRect();
+     if(pr.width<=tr.width*1.12 && pr.height<=tr.height*1.25) target=p;
      else break;
    }
    return target;
  }
+ function placeAsHero(box, heroTarget){
+   if(!heroTarget || !heroTarget.parentElement) return false;
+   if(box.__hwPlaceholder && box.__hwPlaceholder.parentNode!==heroTarget.parentElement){
+     box.__hwPlaceholder.remove();
+     box.__hwPlaceholder=null;
+   }
+   if(!box.__hwPlaceholder){
+     const placeholder=document.createComment('hw-l40-placeholder');
+     heroTarget.parentElement.replaceChild(placeholder, heroTarget);
+     heroTarget.classList.add('hw-l40-hidden-original');
+     box.__hwOriginal=heroTarget;
+     box.__hwPlaceholder=placeholder;
+   } else if(box.__hwOriginal && !box.__hwOriginal.classList.contains('hw-l40-hidden-original')) {
+     box.__hwOriginal.classList.add('hw-l40-hidden-original');
+   }
+   if(box.previousSibling!==box.__hwPlaceholder) box.__hwPlaceholder.parentNode.insertBefore(box, box.__hwPlaceholder);
+   box.classList.remove('hw-l40-preview--fallback');
+   box.classList.add('hw-l40-preview--hero');
+   return true;
+ }
+ function restoreOriginal(box){
+   if(box && box.__hwOriginal && box.__hwPlaceholder && box.__hwPlaceholder.parentNode){
+     box.__hwOriginal.classList.remove('hw-l40-hidden-original');
+     box.__hwPlaceholder.parentNode.replaceChild(box.__hwOriginal, box.__hwPlaceholder);
+   }
+   if(box){
+     box.__hwOriginal=null;
+     box.__hwPlaceholder=null;
+   }
+ }
  function mount(){
    const current=correctProduct();
    let box=document.querySelector('.hw-l40-preview');
-   if(!current){if(box)box.remove();document.querySelectorAll('.hw-l40-hidden-original').forEach(el=>el.classList.remove('hw-l40-hidden-original'));return;}
-   let els=['Name 1','Name 2','Hochzeitsdatum'].map(field);
-   if(els.some(x=>!x)) return;
-   let heroTarget=findHeroTarget();
-   if(!box){
-     box=previewElement();
-     if(heroTarget && heroTarget.parentElement){
-       box.classList.add('hw-l40-preview--hero');
-       heroTarget.classList.add('hw-l40-hidden-original');
-       heroTarget.parentElement.insertBefore(box, heroTarget);
-     } else {
-       const group=els[0].closest('.details-product-option') || els[0].parentElement?.parentElement || els[0];
-       box.classList.add('hw-l40-preview--fallback');
-       group.parentElement.insertBefore(box, group);
-     }
-   } else if(box.classList.contains('hw-l40-preview--fallback') && heroTarget && heroTarget.parentElement){
-     box.classList.remove('hw-l40-preview--fallback');
-     box.classList.add('hw-l40-preview--hero');
-     heroTarget.classList.add('hw-l40-hidden-original');
-     heroTarget.parentElement.insertBefore(box, heroTarget);
-   } else if(box.classList.contains('hw-l40-preview--hero') && heroTarget){
-     heroTarget.classList.add('hw-l40-hidden-original');
+   if(!current){
+     if(box){restoreOriginal(box); box.remove();}
+     document.querySelectorAll('.hw-l40-hidden-original').forEach(el=>el.classList.remove('hw-l40-hidden-original'));
+     return;
    }
-   els.forEach(el=>{if(el.__hw_l40_handler)return;el.__hw_l40_handler=()=>render(box,els);el.addEventListener('input',el.__hw_l40_handler);el.addEventListener('change',el.__hw_l40_handler);});
+   const els=['Name 1','Name 2','Hochzeitsdatum'].map(field);
+   if(els.some(x=>!x)) return;
+   if(!box) box=previewElement();
+   const heroTarget=findHeroTarget();
+   if(heroTarget){
+     placeAsHero(box, heroTarget);
+   } else {
+     const group=els[0].closest('.details-product-option') || els[0].parentElement?.parentElement || els[0];
+     if(box.__hwOriginal) restoreOriginal(box);
+     if(box.parentElement!==group.parentElement || box.nextSibling!==group) group.parentElement.insertBefore(box, group);
+     box.classList.remove('hw-l40-preview--hero');
+     box.classList.add('hw-l40-preview--fallback');
+   }
+   els.forEach(el=>{
+     if(el.__hw_l40_handler) return;
+     el.__hw_l40_handler=()=>render(box,els);
+     el.addEventListener('input',el.__hw_l40_handler);
+     el.addEventListener('change',el.__hw_l40_handler);
+   });
    render(box,els);
+   if(document.fonts && document.fonts.ready) document.fonts.ready.then(()=>render(box,els));
  }
  function schedule(){cancelAnimationFrame(raf);raf=requestAnimationFrame(mount);}
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',schedule);else schedule();
@@ -105,4 +154,4 @@
  window.addEventListener('popstate',schedule);window.addEventListener('hashchange',schedule);
  if(window.Ecwid&&Ecwid.OnPageLoaded)Ecwid.OnPageLoaded.add(schedule);
  setInterval(()=>{if(location.href!==lastPage){lastPage=location.href;schedule();}else if(correctProduct() && !document.querySelector('.hw-l40-preview')){schedule();}},1600);
- })();
+})();

@@ -60,7 +60,7 @@
     if (!root || fields.length !== 3) return;
     const a = tidy(fields[0].value) || 'Anna';
     const b = tidy(fields[1].value) || 'Markus';
-    const d = formattedDate(fields[2].value) || '14. SEPTEMBER 2024';
+    const d = formattedDate(fields[2].value) || 'HOCHZEITSDATUM EINGEBEN';
     fitText(root.querySelector('.hw-l40-names'), `${a} & ${b}`, 88, 590);
     fitText(root.querySelector('.hw-l40-date'), d, 28, 430);
     fitText(root.querySelector('.hw-l40-initials'),
@@ -123,6 +123,76 @@
       }));
     return el;
   }
+
+  function enablePopup(section) {
+    const viewport = section.querySelector('.hw-l40-viewport');
+    if (!viewport) return;
+    viewport.setAttribute('role', 'button');
+    viewport.setAttribute('tabindex', '0');
+    viewport.setAttribute('aria-label', 'Personalisierte Uhr groß ansehen');
+
+    function openPopup() {
+      update();
+      const overlay = document.createElement('div');
+      overlay.className = 'hw-l40-lightbox';
+      overlay.setAttribute('role', 'dialog');
+      overlay.setAttribute('aria-modal', 'true');
+      overlay.setAttribute('aria-label', 'Vergrößerte Gravurvorschau');
+      overlay.innerHTML = `
+        <div class="hw-l40-lightbox-content">
+          <button type="button" class="hw-l40-lightbox-close"
+                  aria-label="Vorschau schließen">×</button>
+          <div class="hw-l40-lightbox-image"></div>
+          <div class="hw-l40-lightbox-controls">
+            <button type="button" data-popup-zoom="-1" aria-label="Verkleinern">−</button>
+            <span class="hw-l40-popup-percent">100 %</span>
+            <button type="button" data-popup-zoom="1" aria-label="Vergrößern">+</button>
+            <button type="button" data-popup-zoom="reset">Zurücksetzen</button>
+          </div>
+        </div>`;
+      const imageArea = overlay.querySelector('.hw-l40-lightbox-image');
+      const svgClone = section.querySelector('.hw-l40-svg').cloneNode(true);
+      imageArea.append(svgClone);
+      const previousOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      document.body.append(overlay);
+      let popupZoom = 1;
+      const closeButton = overlay.querySelector('.hw-l40-lightbox-close');
+      function closePopup() {
+        overlay.remove();
+        document.body.style.overflow = previousOverflow;
+        document.removeEventListener('keydown', onKey);
+        viewport.focus({preventScroll:true});
+      }
+      function onKey(e) {
+        if (e.key === 'Escape') closePopup();
+      }
+      closeButton.addEventListener('click', closePopup);
+      overlay.addEventListener('click', e => {
+        if (e.target === overlay) closePopup();
+      });
+      document.addEventListener('keydown', onKey);
+      overlay.querySelectorAll('[data-popup-zoom]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const action = btn.dataset.popupZoom;
+          popupZoom = action === 'reset' ? 1 :
+            Math.max(1, Math.min(3, popupZoom + Number(action) * 0.25));
+          svgClone.style.transform = `scale(${popupZoom})`;
+          overlay.querySelector('.hw-l40-popup-percent').textContent =
+            Math.round(popupZoom * 100) + ' %';
+        });
+      });
+      closeButton.focus();
+    }
+    viewport.addEventListener('click', openPopup);
+    viewport.addEventListener('keydown', e => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        openPopup();
+      }
+    });
+  }
+
   function destroy() {
     if (root) root.remove();
     root = null;
@@ -142,6 +212,7 @@
       anchor = dateField.parentElement;
     if (!anchor || !anchor.parentElement) return;
     root = createPanel();
+    enablePopup(root);
     fields = found;
     anchor.insertAdjacentElement('afterend', root);
     fields.forEach(input => {

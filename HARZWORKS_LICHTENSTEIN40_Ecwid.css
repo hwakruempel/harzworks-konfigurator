@@ -1,24 +1,16 @@
-/* HARZWORKS – LICHTENSTEIN 40 live preview, updated v3 */
-@import url('https://fonts.googleapis.com/css2?family=Great+Vibes&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=Montserrat:wght@400;500;600&display=swap');
-.hw-l40-hidden-original{display:none !important}
-.hw-l40-preview{box-sizing:border-box;background:#fff;color:#242424;overflow:hidden}
-.hw-l40-preview *{box-sizing:border-box}
-.hw-l40-preview--hero{width:100%;max-width:760px;margin:0 auto 18px}
-.hw-l40-preview--fallback{max-width:560px;margin:16px 0 24px;border:1px solid #e2ded6;border-radius:12px;box-shadow:0 4px 18px #0000000d}
-.hw-l40-heading{font:600 15px/1.4 Montserrat,Arial,sans-serif;padding:10px 2px 14px;letter-spacing:.015em;color:#2b241e}
-.hw-l40-preview--fallback .hw-l40-heading{padding:14px 15px;background:#f6f4ef;border-bottom:1px solid #ece8df}
-.hw-l40-viewport{overflow:hidden;aspect-ratio:1;background:#fff;border-radius:10px}
-.hw-l40-preview--fallback .hw-l40-viewport{border-radius:0}
-.hw-l40-zoomable{width:100%;height:100%;transform-origin:50% 50%;transition:transform .2s ease}
-.hw-l40-svg{display:block;width:100%;height:100%}
-.hw-l40-names{font-family:'Great Vibes','Apple Chancery','Brush Script MT',cursive;fill:#26140d}
-.hw-l40-initials{font-family:'Cormorant Garamond',Georgia,serif;font-style:italic;font-weight:600;fill:#2b170f}
-.hw-l40-date{font-family:Montserrat,Arial,sans-serif;font-weight:500;letter-spacing:3px;fill:#2c1a13}
-.hw-l40-actions{display:flex;align-items:center;justify-content:center;gap:12px;padding:10px 0 8px;flex-wrap:wrap}
-.hw-l40-actions button{background:#fff;border:1px solid #d6d1c9;border-radius:6px;min-width:36px;min-height:34px;cursor:pointer;color:#242424;padding:0 10px}
-.hw-l40-actions button:hover{background:#f6f3ee}
-.hw-l40-percent{font:12px Montserrat,Arial,sans-serif;color:#4d443c}
-.hw-l40-notice{font:11px/1.6 Montserrat,Arial,sans-serif;color:#777;margin:0;padding:8px 0 10px}
-.hw-l40-preview--fallback .hw-l40-notice{padding:8px 15px 14px}
-@media(max-width:1024px){.hw-l40-preview--hero{max-width:100%;}}
-@media(max-width:600px){.hw-l40-preview--hero,.hw-l40-preview--fallback{max-width:100%;margin:12px 0 18px}.hw-l40-heading{font-size:14px}.hw-l40-actions{gap:10px}}
+/* HARZWORKS LICHTENSTEIN 40 – v4 stable preview */
+@import url('https://fonts.googleapis.com/css2?family=Allura&family=Libre+Baskerville:wght@400;700&family=Montserrat:wght@400;500;600&display=swap');
+.hw-l40-preview--v4{box-sizing:border-box;display:block;position:relative;width:100%;max-width:100%;margin:0 auto 14px;background:#fff;color:#28221d;z-index:1}
+.hw-l40-preview--v4 *{box-sizing:border-box}
+.hw-l40-preview--v4 .hw-l40-heading{font:600 13px/1.5 Montserrat,Arial,sans-serif;text-align:center;padding:4px 0 10px}
+.hw-l40-preview--v4 .hw-l40-viewport{width:100%;overflow:hidden;aspect-ratio:1;background:white}
+.hw-l40-preview--v4 .hw-l40-zoomable{width:100%;height:100%;transform-origin:50% 50%;transition:transform .15s ease}
+.hw-l40-preview--v4 .hw-l40-svg{width:100%;height:100%;display:block}
+.hw-l40-preview--v4 .hw-l40-names{font-family:'Allura','Apple Chancery',cursive;font-weight:400;fill:#26140d}
+.hw-l40-preview--v4 .hw-l40-initials{font-family:'Libre Baskerville',Georgia,serif;font-style:italic;fill:#2b170f}
+.hw-l40-preview--v4 .hw-l40-date{font-family:Montserrat,Arial,sans-serif;font-weight:500;letter-spacing:2.5px;fill:#2c1a13}
+.hw-l40-preview--v4 .hw-l40-actions{display:flex;justify-content:center;align-items:center;gap:12px;padding:8px 4px;flex-wrap:wrap}
+.hw-l40-preview--v4 .hw-l40-actions button{min-height:34px;min-width:34px;padding:3px 9px;border:1px solid #c9c3bb;background:#fff;border-radius:6px;color:#2b2b2b;cursor:pointer}
+.hw-l40-preview--v4 .hw-l40-percent{font:12px Montserrat,Arial,sans-serif}
+.hw-l40-preview--v4 .hw-l40-notice{font:11px/1.5 Montserrat,Arial,sans-serif;text-align:center;color:#777;margin:0;padding:5px 8px 12px}
+@media(max-width:600px){.hw-l40-preview--v4 .hw-l40-heading{font-size:12px}}

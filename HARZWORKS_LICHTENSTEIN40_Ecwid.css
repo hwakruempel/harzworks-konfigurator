@@ -128,3 +128,13 @@ html body .hw-l40-disclosure button.hw-l40-toggle .hw-l40-chevron {font-size:24p
 
 /* V12: Namen ausdrücklich in Dancing Script, Datum unverändert. */
 .hw-l40-disclosure .hw-l40-names, .hw-l40-lightbox .hw-l40-names { font-family:'Dancing Script',cursive !important; font-weight:400 !important; }
+
+/* V13: Ensure the chosen font wins against theme and older cached selectors. */
+.hw-l40-disclosure .hw-l40-names,
+.hw-l40-lightbox .hw-l40-names,
+.hw-l40-disclosure .hw-l40-names tspan,
+.hw-l40-lightbox .hw-l40-names tspan {
+  font-family: 'Dancing Script', cursive !important;
+  font-weight: 500 !important;
+  font-style: normal !important;
+}

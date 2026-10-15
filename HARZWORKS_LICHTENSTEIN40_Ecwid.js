@@ -4,6 +4,21 @@
   if (window.__HW_L40_V6__) return;
   window.__HW_L40_V6__ = true;
 
+  // Explicitly register the web font independently of Ecwid's cached CSS.
+  const HW_FONT_URL = 'https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;500;600;700&display=swap';
+  if (!document.getElementById('hw-l40-dancing-font-v13')) {
+    const link = document.createElement('link');
+    link.id = 'hw-l40-dancing-font-v13';
+    link.rel = 'stylesheet';
+    link.href = HW_FONT_URL;
+    document.head.appendChild(link);
+  }
+  if (!document.getElementById('hw-l40-dancing-override-v13')) {
+    const style = document.createElement('style');
+    style.id = 'hw-l40-dancing-override-v13';
+    style.textContent = '.hw-l40-disclosure .hw-l40-names, .hw-l40-lightbox .hw-l40-names, .hw-l40-disclosure .hw-l40-names tspan, .hw-l40-lightbox .hw-l40-names tspan { font-family: "Dancing Script", cursive !important; font-style: normal !important; font-weight: 500 !important; }';
+    document.head.appendChild(style);
+  }
   const PRODUCT = '871120612';
   const MONTHS = ['JANUAR','FEBRUAR','MÄRZ','APRIL','MAI','JUNI','JULI',
                   'AUGUST','SEPTEMBER','OKTOBER','NOVEMBER','DEZEMBER'];
@@ -242,6 +257,12 @@
     root = createPanel();
     enablePopup(root);
     fields = found;
+    if (document.fonts && document.fonts.load) {
+      document.fonts.load('500 48px "Dancing Script"').then(() => {
+        if (root && root.isConnected) update();
+      }).catch(() => {});
+    }
+
     anchor.insertAdjacentElement('afterend', root);
     fields.forEach(input => {
       input.addEventListener('input', update);

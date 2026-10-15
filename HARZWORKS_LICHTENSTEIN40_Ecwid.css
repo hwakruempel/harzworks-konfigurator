@@ -1,25 +1,22 @@
-/* HARZWORKS LICHTENSTEIN 40 – v4 stable preview */
-@import url('https://fonts.googleapis.com/css2?family=Allura&family=Libre+Baskerville:wght@400;700&family=Montserrat:wght@400;500;600&display=swap');
-.hw-l40-preview--v4{box-sizing:border-box;display:block;position:relative;width:100%;max-width:100%;margin:0 auto 14px;background:#fff;color:#28221d;z-index:1}
-.hw-l40-preview--v4 *{box-sizing:border-box}
-.hw-l40-preview--v4 .hw-l40-heading{font:600 13px/1.5 Montserrat,Arial,sans-serif;text-align:center;padding:4px 0 10px}
-.hw-l40-preview--v4 .hw-l40-viewport{width:100%;overflow:hidden;aspect-ratio:1;background:white}
-.hw-l40-preview--v4 .hw-l40-zoomable{width:100%;height:100%;transform-origin:50% 50%;transition:transform .15s ease}
-.hw-l40-preview--v4 .hw-l40-svg{width:100%;height:100%;display:block}
-.hw-l40-preview--v4 .hw-l40-names{font-family:'Allura','Apple Chancery',cursive;font-weight:400;fill:#26140d}
-.hw-l40-preview--v4 .hw-l40-initials{font-family:'Libre Baskerville',Georgia,serif;font-style:italic;fill:#2b170f}
-.hw-l40-preview--v4 .hw-l40-date{font-family:Montserrat,Arial,sans-serif;font-weight:500;letter-spacing:2.5px;fill:#2c1a13}
-.hw-l40-preview--v4 .hw-l40-actions{display:flex;justify-content:center;align-items:center;gap:12px;padding:8px 4px;flex-wrap:wrap}
-.hw-l40-preview--v4 .hw-l40-actions button{min-height:34px;min-width:34px;padding:3px 9px;border:1px solid #c9c3bb;background:#fff;border-radius:6px;color:#2b2b2b;cursor:pointer}
-.hw-l40-preview--v4 .hw-l40-percent{font:12px Montserrat,Arial,sans-serif}
-.hw-l40-preview--v4 .hw-l40-notice{font:11px/1.5 Montserrat,Arial,sans-serif;text-align:center;color:#777;margin:0;padding:5px 8px 12px}
-@media(max-width:600px){.hw-l40-preview--v4 .hw-l40-heading{font-size:12px}}
-
-/* Disable Ecwid's original hover lens where the customized product image is shown. */
-.hw-l40-gallery-active [class*="zoom"],
-.hw-l40-gallery-active [class*="Zoom"],
-.hw-l40-gallery-active [class*="magnifier"],
-.hw-l40-gallery-active [class*="Magnifier"]{display:none!important;pointer-events:none!important}
-.hw-l40-gallery-active .hw-l40-preview{pointer-events:auto!important}
-.hw-l40-gallery-active .hw-l40-preview .hw-l40-viewport{cursor:default}
-@media(max-width:767px){.hw-l40-preview--v4{max-width:100%!important}.hw-l40-fallback{margin-bottom:16px}}
+/* HARZWORKS LICHTENSTEIN 40 – Klappvorschau V6 */
+@import url('https://fonts.googleapis.com/css2?family=Allura&family=Libre+Baskerville:ital@0;1&family=Montserrat:wght@400;500;600&display=swap');
+.hw-l40-disclosure{width:100%;max-width:640px;margin:16px 0 20px;box-sizing:border-box;font-family:Montserrat,Arial,sans-serif;color:#252525}
+.hw-l40-disclosure *{box-sizing:border-box}
+.hw-l40-toggle{display:flex;justify-content:space-between;align-items:center;gap:12px;width:100%;min-height:48px;padding:12px 16px;background:#242424;color:#fff;border:1px solid #242424;border-radius:5px;font:600 14px/1.4 Montserrat,Arial,sans-serif;cursor:pointer;text-align:left}
+.hw-l40-toggle:hover{background:#3b3b3b}
+.hw-l40-chevron{font-size:23px;line-height:1;transition:transform .2s}
+.hw-l40-toggle[aria-expanded="true"] .hw-l40-chevron{transform:rotate(180deg)}
+.hw-l40-panel[hidden]{display:none!important}
+.hw-l40-panel{padding:16px 8px 12px;border:1px solid #e8e4df;border-top:0;background:#fff}
+.hw-l40-heading{margin:0 0 10px;text-align:center;font:600 13px/1.5 Montserrat,Arial,sans-serif}
+.hw-l40-viewport{width:100%;aspect-ratio:1;overflow:hidden;background:white}
+.hw-l40-zoomable{width:100%;height:100%;transform-origin:50% 50%;transition:transform .16s ease}
+.hw-l40-svg{display:block;width:100%;height:100%}
+.hw-l40-names{font-family:'Allura','Apple Chancery',cursive;font-weight:400;fill:#26140d}
+.hw-l40-initials{font-family:'Libre Baskerville',Georgia,serif;font-style:italic;fill:#2b170f}
+.hw-l40-date{font-family:Montserrat,Arial,sans-serif;font-weight:500;letter-spacing:2.5px;fill:#2c1a13}
+.hw-l40-actions{display:flex;justify-content:center;align-items:center;gap:12px;padding:10px 4px;flex-wrap:wrap}
+.hw-l40-actions button{min-height:35px;min-width:35px;padding:4px 10px;border:1px solid #d1cbc3;background:#fff;border-radius:5px;color:#242424;cursor:pointer}
+.hw-l40-percent{font:12px Montserrat,Arial,sans-serif}
+.hw-l40-notice{font:11px/1.5 Montserrat,Arial,sans-serif;color:#777;text-align:center;padding:0 5px;margin:5px 0}
+@media(max-width:600px){.hw-l40-disclosure{max-width:100%;margin:14px 0 18px}.hw-l40-panel{padding:12px 4px}.hw-l40-toggle{min-height:50px}}

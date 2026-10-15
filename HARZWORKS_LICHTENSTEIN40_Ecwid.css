@@ -138,3 +138,7 @@ html body .hw-l40-disclosure button.hw-l40-toggle .hw-l40-chevron {font-size:24p
   font-weight: 500 !important;
   font-style: normal !important;
 }
+
+/* V14: clearly oversized first letters, in both preview and popup. */
+.hw-l40-disclosure .hw-l40-names tspan.hw-l40-capital,
+.hw-l40-lightbox .hw-l40-names tspan.hw-l40-capital {font-size:1.65em !important;}

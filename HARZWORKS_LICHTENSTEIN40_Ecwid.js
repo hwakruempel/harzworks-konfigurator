@@ -1,4 +1,4 @@
-/* HARZWORKS LICHTENSTEIN 40 – ausklappbare Gravurvorschau, Version 15: Alex Brush without separate oversized initials; live calendar update */
+/* HARZWORKS LICHTENSTEIN 40 – ausklappbare Gravurvorschau, Version 17: Alex Brush; Ecwid file upload field targeting Bild Vorschau */
 (function () {
   'use strict';
   if (window.__HW_L40_V6__) return;
@@ -227,13 +227,33 @@
   // Experimental Ecwid file-option integration. The browser may attach a file;
   // Ecwid must still confirm processing it on a test order.
   let uploadTimer = 0, uploadInProgress = false, lastAttachedKey = '';
+  window.HARZWORKS_uploadStatus = 'Noch kein Uploadversuch';
   function uploadField() {
-    for (const label of document.querySelectorAll('label,span,div,.details-product-option__title')) {
-      if (label.children.length > 3 || tidy(label.textContent).replace(/\s*\*$/, '') !== 'Gravurvorschau') continue;
-      let wrapper = label;
-      for (let i=0; i<6 && wrapper; i++, wrapper=wrapper.parentElement) {
-        const inputs=[...wrapper.querySelectorAll('input[type="file"]')];
-        if (inputs.length===1) return inputs[0];
+    // Identify the Ecwid option *container*, never a numbered file input.
+    // The customer's configured field currently displays as "Bild Vorschau".
+    const options = [...document.querySelectorAll(
+      '.details-product-option, .ecwid-productBrowser-details-option, [class*="details-product-option"]'
+    )];
+    const matches = options.filter(option => {
+      const title = option.querySelector(
+        '.details-product-option__title, .details-product-option__name, label, [class*="option__title"], [class*="option__name"]'
+      );
+      const text = (title ? title.textContent : option.textContent).replace(/\s+/g,' ').trim().toLowerCase();
+      return /(?:bild\s*vorschau|gravurvorschau)/i.test(text) &&
+        option.querySelectorAll('input[type="file"]').length === 1;
+    });
+    if (matches.length === 1) return matches[0].querySelector('input[type="file"]');
+    // Ecwid themes sometimes render option headings separately; find nearest
+    // option ancestor from a precisely matching label or text node.
+    const headings = [...document.querySelectorAll('label, [class*="option__title"], [class*="option__name"]')]
+      .filter(el => /^(bild\s*vorschau|gravurvorschau)\s*\*?$/i.test(
+        el.textContent.replace(/\s+/g,' ').trim()));
+    for (const heading of headings) {
+      let parent=heading.parentElement;
+      for (let i=0; parent && i<7; i++,parent=parent.parentElement) {
+        const inputs=parent.querySelectorAll('input[type="file"]');
+        if (inputs.length === 1) return inputs[0];
+        if (inputs.length > 1) break;
       }
     }
     return null;
@@ -270,7 +290,12 @@
   async function attachPreview() {
     if (uploadInProgress || !root || !root.isConnected || fields.length!==3 ||
         fields.some(f=>!tidy(f.value))) return;
-    const upload=uploadField(); if (!upload) return;
+    const upload=uploadField();
+    if (!upload) {
+      window.HARZWORKS_uploadStatus = 'Uploadfeld Bild Vorschau nicht eindeutig erkannt';
+      console.warn('[HARZWORKS]', window.HARZWORKS_uploadStatus);
+      return;
+    }
     const key=fields.map(f=>f.value).join('|');
     if (key===lastAttachedKey) return;
     uploadInProgress=true;
@@ -282,9 +307,13 @@
       upload.files=transfer.files;
       upload.dispatchEvent(new Event('input',{bubbles:true}));
       upload.dispatchEvent(new Event('change',{bubbles:true}));
+      // Ecwid may replace/reset the file input after it accepts the file.
+      // This alone is NOT a confirmation of storage in the order.
+      window.HARZWORKS_uploadStatus = 'PNG an Ecwid übergeben – Vorschaubild und Testbestellung prüfen';
       lastAttachedKey=key;
       console.info('[HARZWORKS] Gravurvorschau an Ecwid-Dateifeld übergeben; bitte im Testauftrag prüfen.');
     } catch(e) {
+      window.HARZWORKS_uploadStatus = 'Uploadfehler: ' + e.message;
       console.warn('[HARZWORKS] Automatische Bildübergabe nicht möglich:',e);
     } finally { uploadInProgress=false; }
   }

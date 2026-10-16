@@ -1,22 +1,22 @@
-/* HARZWORKS LICHTENSTEIN 40 – ausklappbare Gravurvorschau, Version 14: larger Dancing Script initials and live calendar update */
+/* HARZWORKS LICHTENSTEIN 40 – ausklappbare Gravurvorschau, Version 15: Alex Brush without separate oversized initials; live calendar update */
 (function () {
   'use strict';
   if (window.__HW_L40_V6__) return;
   window.__HW_L40_V6__ = true;
 
   // Explicitly register the web font independently of Ecwid's cached CSS.
-  const HW_FONT_URL = 'https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;500;600;700&display=swap';
-  if (!document.getElementById('hw-l40-dancing-font-v14')) {
+  const HW_FONT_URL = 'https://fonts.googleapis.com/css2?family=Alex+Brush&display=swap';
+  if (!document.getElementById('hw-l40-alexbrush-font-v15')) {
     const link = document.createElement('link');
-    link.id = 'hw-l40-dancing-font-v14';
+    link.id = 'hw-l40-alexbrush-font-v15';
     link.rel = 'stylesheet';
     link.href = HW_FONT_URL;
     document.head.appendChild(link);
   }
-  if (!document.getElementById('hw-l40-dancing-override-v14')) {
+  if (!document.getElementById('hw-l40-alexbrush-override-v15')) {
     const style = document.createElement('style');
-    style.id = 'hw-l40-dancing-override-v14';
-    style.textContent = '.hw-l40-disclosure .hw-l40-names, .hw-l40-lightbox .hw-l40-names, .hw-l40-disclosure .hw-l40-names tspan, .hw-l40-lightbox .hw-l40-names tspan { font-family: "Dancing Script", cursive !important; font-style: normal !important; font-weight: 500 !important; }';
+    style.id = 'hw-l40-alexbrush-override-v15';
+    style.textContent = '.hw-l40-disclosure .hw-l40-names, .hw-l40-lightbox .hw-l40-names, .hw-l40-disclosure .hw-l40-names tspan, .hw-l40-lightbox .hw-l40-names tspan { font-family: "Alex Brush", cursive !important; font-style: normal !important; font-weight: 500 !important; }';
     document.head.appendChild(style);
   }
   const PRODUCT = '871120612';
@@ -73,31 +73,8 @@
     } catch(e) {}
   }
   function setCalligraphy(node, first, second) {
-    // Enlarged initials are kept as actual text so every entered name works.
-    const ns = 'http://www.w3.org/2000/svg';
-    const part = (content, initial) => {
-      const t = document.createElementNS(ns, 'tspan');
-      if (initial) t.setAttribute('class', 'hw-l40-capital');
-      t.textContent = content;
-      node.appendChild(t);
-    };
-    node.replaceChildren();
-    part(first.charAt(0).toLocaleUpperCase('de-DE'), true);
-    part(first.slice(1), false);
-    part(' & ', false);
-    part(second.charAt(0).toLocaleUpperCase('de-DE'), true);
-    part(second.slice(1), false);
-    node.setAttribute('font-size', '99');
-    node.removeAttribute('textLength');
-    node.removeAttribute('lengthAdjust');
-    // Resize only the complete line when it is longer than the engraving area.
-    // Do not recalculate based on an already scaled measurement.
-    try {
-      if (node.getComputedTextLength() > 585) {
-        node.setAttribute('textLength', '585');
-        node.setAttribute('lengthAdjust', 'spacingAndGlyphs');
-      }
-    } catch(e) {}
+    // One continuous Alex Brush text run; no individually enlarged capitals.
+    fitText(node, `${first} & ${second}`, 99, 585);
   }
   function update() {
     if (!root || fields.length !== 3) return;
@@ -271,7 +248,7 @@
     fields = found;
     lastValues = null;
     if (document.fonts && document.fonts.load) {
-      document.fonts.load('500 48px "Dancing Script"').then(() => {
+      document.fonts.load('500 48px "Alex Brush"').then(() => {
         if (root && root.isConnected) update();
       }).catch(() => {});
     }

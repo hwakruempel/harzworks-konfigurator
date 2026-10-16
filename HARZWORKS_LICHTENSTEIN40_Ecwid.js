@@ -1,4 +1,4 @@
-/* HARZWORKS LICHTENSTEIN 40 – ausklappbare Gravurvorschau, Version 18: Alex Brush, live calendar and corrected Ecwid image-upload targeting */
+/* HARZWORKS LICHTENSTEIN 40 – ausklappbare Gravurvorschau, Version 15: Alex Brush without separate oversized initials; live calendar update */
 (function () {
   'use strict';
   if (window.__HW_L40_V6__) return;
@@ -227,31 +227,13 @@
   // Experimental Ecwid file-option integration. The browser may attach a file;
   // Ecwid must still confirm processing it on a test order.
   let uploadTimer = 0, uploadInProgress = false, lastAttachedKey = '';
-  function reportUpload(stage, extra) {
-    window.HARZWORKS_uploadStatus = { stage, detail: extra || '', time: new Date().toLocaleTimeString('de-DE') };
-    if (stage === 'error') console.warn('[HARZWORKS Upload]', extra);
-    else console.info('[HARZWORKS Upload]', stage, extra || '');
-  }
   function uploadField() {
-    // The Ecwid option is titled "Bild Vorschau". "Gravurvorschau"
-    // is the separate label for our configurator, NOT the file option.
-    const titleSelectors = 'label,.details-product-option__title,.details-product-option__name,.form-control__label,span,div';
-    const titles = [...document.querySelectorAll(titleSelectors)].filter(el =>
-      el.children.length <= 3 && /^(?:Bild\s*Vorschau|Gravurvorschau)\s*\*?$/i.test(tidy(el.textContent))
-    );
-    // Prefer the actual Ecwid name: avoid matching our own popup heading.
-    titles.sort((a,b) => Number(!/^Bild\s*Vorschau/i.test(tidy(a.textContent))) - Number(!/^Bild\s*Vorschau/i.test(tidy(b.textContent))));
-    for (const label of titles) {
-      const option = label.closest('.details-product-option,.ecwid-productBrowser-details-option,[class*="product-option"],[class*="ProductOption"]');
-      if (option) {
-        const inputs=[...option.querySelectorAll('input[type="file"]')];
-        if (inputs.length === 1) return inputs[0];
-      }
+    for (const label of document.querySelectorAll('label,span,div,.details-product-option__title')) {
+      if (label.children.length > 3 || tidy(label.textContent).replace(/\s*\*$/, '') !== 'Gravurvorschau') continue;
       let wrapper = label;
       for (let i=0; i<6 && wrapper; i++, wrapper=wrapper.parentElement) {
         const inputs=[...wrapper.querySelectorAll('input[type="file"]')];
         if (inputs.length===1) return inputs[0];
-        if (inputs.length>1) break;
       }
     }
     return null;
@@ -288,8 +270,7 @@
   async function attachPreview() {
     if (uploadInProgress || !root || !root.isConnected || fields.length!==3 ||
         fields.some(f=>!tidy(f.value))) return;
-    const upload=uploadField();
-    if (!upload) { reportUpload('field-not-found', 'Ecwid-Feld Bild Vorschau nicht gefunden'); return; }
+    const upload=uploadField(); if (!upload) return;
     const key=fields.map(f=>f.value).join('|');
     if (key===lastAttachedKey) return;
     uploadInProgress=true;
@@ -302,9 +283,9 @@
       upload.dispatchEvent(new Event('input',{bubbles:true}));
       upload.dispatchEvent(new Event('change',{bubbles:true}));
       lastAttachedKey=key;
-      reportUpload('dispatched', 'PNG an Dateifeld übergeben; Ecwid-Bestellübernahme noch nicht bestätigt');
+      console.info('[HARZWORKS] Gravurvorschau an Ecwid-Dateifeld übergeben; bitte im Testauftrag prüfen.');
     } catch(e) {
-      reportUpload('error', String(e && e.message || e));
+      console.warn('[HARZWORKS] Automatische Bildübergabe nicht möglich:',e);
     } finally { uploadInProgress=false; }
   }
   function queuePreviewUpload() {

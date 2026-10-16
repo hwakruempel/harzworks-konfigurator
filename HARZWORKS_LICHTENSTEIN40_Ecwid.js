@@ -227,6 +227,10 @@
   // Experimental Ecwid file-option integration. The browser may attach a file;
   // Ecwid must still confirm processing it on a test order.
   let uploadTimer = 0, uploadInProgress = false, lastAttachedKey = '';
+  // V21: Keep the last verified preview in memory through Ecwid's SPA cart navigation.
+  let checkoutPreviewBlob = null, checkoutPreviewKey = '';
+  let checkoutModalOpen = false, checkoutResumeElement = null;
+  const bypassCheckoutOnce = new WeakSet();
   function uploadField() {
     // Ecwid baut Titel und Upload-Button oft in getrennten, tief
     // verschachtelten Elementen auf. Deshalb nicht nach starren IDs suchen.
@@ -339,9 +343,112 @@
     } finally { uploadInProgress=false; }
   }
   function queuePreviewUpload() {
+    // Do not offer an obsolete preview while the customer edits their engraving.
+    if (fields.length === 3 && checkoutPreviewKey !== fields.map(f => f.value).join('|')) {
+      checkoutPreviewBlob = null;
+    }
     clearTimeout(uploadTimer);
     uploadTimer=setTimeout(attachPreview,900);
   }
+
+  // V21 checkout question. The existing Ecwid cart/check-out remains in charge:
+  // it is only resumed after a customer choice. No order is submitted by this code.
+  function ensureCheckoutModalStyle() {
+    if (document.getElementById('hw-l40-checkout-style-v21')) return;
+    const style = document.createElement('style');
+    style.id = 'hw-l40-checkout-style-v21';
+    style.textContent = `
+      .hw-l40-save-backdrop{position:fixed;inset:0;z-index:2147483600;background:rgba(13,15,14,.64);display:flex;align-items:center;justify-content:center;padding:20px;box-sizing:border-box}
+      .hw-l40-save-dialog{position:relative;box-sizing:border-box;width:min(100%,450px);padding:34px 30px 26px;background:#f8f6f1;border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,.35);color:#27231e;font-family:Arial,Helvetica,sans-serif;text-align:center}
+      .hw-l40-save-dialog h2{font-size:23px;line-height:1.3;margin:0 0 12px;font-weight:600;letter-spacing:.1px}
+      .hw-l40-save-dialog p{font-size:15px;line-height:1.6;margin:0 0 21px;color:#59544d}
+      .hw-l40-save-dialog button{font:inherit;cursor:pointer}
+      .hw-l40-save-primary{width:100%;min-height:47px;border:0;border-radius:4px;background:#262522;color:white;padding:12px 16px;font-size:15px;font-weight:600}
+      .hw-l40-save-secondary{display:block;width:100%;min-height:42px;border:1px solid #bfbab0;border-radius:4px;background:transparent;color:#25231e;padding:10px 14px;font-size:14px;margin-top:11px}
+      .hw-l40-save-dialog .hw-l40-save-note{font-size:12px;color:#736d64;margin:17px 0 0}
+      @media(max-width:480px){.hw-l40-save-dialog{padding:29px 20px 24px}.hw-l40-save-dialog h2{font-size:21px}}
+    `;
+    document.head.appendChild(style);
+  }
+  function triggerPreviewDownload() {
+    if (!checkoutPreviewBlob) return;
+    const url = URL.createObjectURL(checkoutPreviewBlob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'HARZWORKS_LICHTENSTEIN40_Meine_Gravurvorschau.png';
+    link.style.display = 'none';
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    // Some mobile browsers need time to finish reading the object URL.
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
+  }
+  function resumeCheckout() {
+    const element = checkoutResumeElement;
+    checkoutResumeElement = null;
+    if (element && element.isConnected) {
+      bypassCheckoutOnce.add(element);
+      element.click();
+    }
+  }
+  function showCheckoutSaveModal(element) {
+    if (checkoutModalOpen) return;
+    checkoutModalOpen = true;
+    checkoutResumeElement = element;
+    ensureCheckoutModalStyle();
+    const previousFocus = document.activeElement;
+    const backdrop = document.createElement('div');
+    backdrop.className = 'hw-l40-save-backdrop';
+    backdrop.innerHTML = `
+      <section class="hw-l40-save-dialog" role="dialog" aria-modal="true" aria-labelledby="hw-l40-save-title" aria-describedby="hw-l40-save-description">
+        <h2 id="hw-l40-save-title">Deinen Entwurf speichern?</h2>
+        <p id="hw-l40-save-description">Möchtest du deine persönliche Gravurvorschau als Bild speichern, bevor es zur Kasse geht?</p>
+        <button type="button" class="hw-l40-save-primary">Ja, Entwurf speichern</button>
+        <button type="button" class="hw-l40-save-secondary">Ohne Speichern weiter</button>
+        <p class="hw-l40-save-note">Dein Entwurf wird unabhängig davon mit der Bestellung an HARZWORKS übermittelt.</p>
+      </section>`;
+    document.body.appendChild(backdrop);
+    function closeAndContinue(save) {
+      if (save) {
+        try { triggerPreviewDownload(); }
+        catch (err) { console.warn('[HARZWORKS] Bilddownload fehlgeschlagen', err); }
+      }
+      backdrop.remove();
+      checkoutModalOpen = false;
+      if (previousFocus && previousFocus.isConnected && previousFocus.focus) previousFocus.focus();
+      resumeCheckout();
+    }
+    backdrop.querySelector('.hw-l40-save-primary').addEventListener('click', () => closeAndContinue(true));
+    backdrop.querySelector('.hw-l40-save-secondary').addEventListener('click', () => closeAndContinue(false));
+    // Prevent dismissing the modal by clicking outside: a clear decision is required.
+    const stopKeys = e => {
+      if (e.key === 'Escape') { e.preventDefault(); closeAndContinue(false); }
+      if (e.key !== 'Tab') return;
+      const buttons = [...backdrop.querySelectorAll('button')];
+      if (e.shiftKey && document.activeElement === buttons[0]) { e.preventDefault(); buttons[1].focus(); }
+      if (!e.shiftKey && document.activeElement === buttons[1]) { e.preventDefault(); buttons[0].focus(); }
+    };
+    backdrop.addEventListener('keydown', stopKeys);
+    backdrop.querySelector('.hw-l40-save-primary').focus();
+  }
+  document.addEventListener('click', e => {
+    if (!checkoutPreviewBlob || checkoutModalOpen || !e.isTrusted) return;
+    const el = e.target && e.target.closest && e.target.closest('button,a,input[type="submit"],[role="button"]');
+    if (!el || el.closest('.hw-l40-save-backdrop')) return;
+    if (bypassCheckoutOnce.has(el)) { bypassCheckoutOnce.delete(el); return; }
+    const text = (el.innerText || el.value || el.getAttribute('aria-label') || '').trim();
+    const cssId = ((el.id || '') + ' ' + (typeof el.className === 'string' ? el.className : '')).toLowerCase();
+    const isCheckout = /^(zur\s+kasse|zur\s+bezahlung|checkout|proceed\s+to\s+checkout|weiter\s+zur\s+kasse)(\s*[→›>]*)?$/i.test(text)
+      || (/(checkout|goto.?checkout)/.test(cssId) && !/paypal|apple.?pay|google.?pay/.test(cssId));
+    if (!isCheckout) return;
+    // Never intercept payment/submit actions from a checkout already in progress.
+    if (/checkout|checkouta/i.test(location.href) && !/cart|warenkorb/i.test(location.href)) return;
+    e.preventDefault();
+    e.stopPropagation();
+    e.stopImmediatePropagation();
+    showCheckoutSaveModal(el);
+  }, true);
+
   function destroy() {
     if (root) root.remove();
     root = null;

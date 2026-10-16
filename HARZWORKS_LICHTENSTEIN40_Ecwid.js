@@ -224,11 +224,81 @@
     });
   }
 
+  // Experimental Ecwid file-option integration. The browser may attach a file;
+  // Ecwid must still confirm processing it on a test order.
+  let uploadTimer = 0, uploadInProgress = false, lastAttachedKey = '';
+  function uploadField() {
+    for (const label of document.querySelectorAll('label,span,div,.details-product-option__title')) {
+      if (label.children.length > 3 || tidy(label.textContent).replace(/\s*\*$/, '') !== 'Gravurvorschau') continue;
+      let wrapper = label;
+      for (let i=0; i<6 && wrapper; i++, wrapper=wrapper.parentElement) {
+        const inputs=[...wrapper.querySelectorAll('input[type="file"]')];
+        if (inputs.length===1) return inputs[0];
+      }
+    }
+    return null;
+  }
+  function drawPreviewPng() {
+    return new Promise((resolve,reject) => {
+      const bg = new Image();
+      bg.onload = async () => {
+        try {
+          if (document.fonts && document.fonts.load)
+            await document.fonts.load('99px "Alex Brush"');
+          const canvas=document.createElement('canvas'); canvas.width=1254; canvas.height=1254;
+          const ctx=canvas.getContext('2d');
+          ctx.drawImage(bg,0,0,1254,1254);
+          const a=tidy(fields[0].value), b=tidy(fields[1].value), date=formattedDate(fields[2].value);
+          const write=(value,font,x,y,maxWidth) => {
+            ctx.save(); ctx.fillStyle='#26140d'; ctx.textAlign='center';
+            ctx.textBaseline='alphabetic'; ctx.font=font;
+            ctx.fillText(value,x,y,maxWidth); ctx.restore();
+          };
+          ctx.save(); ctx.translate(377,785); ctx.rotate(-12*Math.PI/180);
+          ctx.fillStyle='#2b170f'; ctx.textAlign='center';
+          ctx.font='italic 49px Georgia, serif';
+          ctx.fillText(a[0].toUpperCase()+'&'+b[0].toUpperCase(),0,0,112); ctx.restore();
+          write(a+' & '+b,'99px "Alex Brush", cursive',774,795,585);
+          write(date,'500 36.8px Montserrat, Arial, sans-serif',774,853,435);
+          canvas.toBlob(blob=>blob?resolve(blob):reject(Error('PNG konnte nicht erzeugt werden')),'image/png');
+        } catch(error) { reject(error); }
+      };
+      bg.onerror=()=>reject(Error('Uhrenbild konnte nicht geladen werden'));
+      bg.src=BACKGROUND;
+    });
+  }
+  async function attachPreview() {
+    if (uploadInProgress || !root || !root.isConnected || fields.length!==3 ||
+        fields.some(f=>!tidy(f.value))) return;
+    const upload=uploadField(); if (!upload) return;
+    const key=fields.map(f=>f.value).join('|');
+    if (key===lastAttachedKey) return;
+    uploadInProgress=true;
+    try {
+      const blob=await drawPreviewPng();
+      if (!root || !root.isConnected || !upload.isConnected || key!==fields.map(f=>f.value).join('|')) return;
+      const f=new File([blob],'HARZWORKS_LICHTENSTEIN40_Gravurvorschau.png',{type:'image/png'});
+      const transfer=new DataTransfer(); transfer.items.add(f);
+      upload.files=transfer.files;
+      upload.dispatchEvent(new Event('input',{bubbles:true}));
+      upload.dispatchEvent(new Event('change',{bubbles:true}));
+      lastAttachedKey=key;
+      console.info('[HARZWORKS] Gravurvorschau an Ecwid-Dateifeld übergeben; bitte im Testauftrag prüfen.');
+    } catch(e) {
+      console.warn('[HARZWORKS] Automatische Bildübergabe nicht möglich:',e);
+    } finally { uploadInProgress=false; }
+  }
+  function queuePreviewUpload() {
+    clearTimeout(uploadTimer);
+    uploadTimer=setTimeout(attachPreview,900);
+  }
   function destroy() {
     if (root) root.remove();
     root = null;
     fields = [];
     lastValues = null;
+    lastAttachedKey = '';
+    clearTimeout(uploadTimer);
   }
   function mount() {
     if (!onProduct()) { destroy(); return; }
@@ -257,11 +327,14 @@
     fields.forEach(input => {
       input.addEventListener('input', update);
       input.addEventListener('change', update);
+      input.addEventListener('change', queuePreviewUpload);
+      input.addEventListener('input', queuePreviewUpload);
       // Kalenderauswahl kann über den Browser auch erst beim Schließen aktualisiert werden.
       input.addEventListener('blur', update);
     });
     update();
     lastValues = fields.map(f => f.value);
+    queuePreviewUpload();
   }
   // Ecwid's calendar may set input.value programmatically without firing
   // an input/change event. A value-only check keeps rendering stable.
@@ -272,6 +345,7 @@
     if (!lastValues || values.some((v, i) => v !== lastValues[i])) {
       lastValues = values;
       update();
+      queuePreviewUpload();
     }
   }, 250);
   if (document.readyState === 'loading')

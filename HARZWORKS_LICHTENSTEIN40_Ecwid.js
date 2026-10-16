@@ -227,7 +227,7 @@
   // Experimental Ecwid file-option integration. The browser may attach a file;
   // Ecwid must still confirm processing it on a test order.
   let uploadTimer = 0, uploadInProgress = false, lastAttachedKey = '';
-  // V21: Keep the last verified preview in memory through Ecwid's SPA cart navigation.
+  // V22: Keep the last generated preview in memory through Ecwid's SPA cart navigation.
   let checkoutPreviewBlob = null, checkoutPreviewKey = '';
   let checkoutModalOpen = false, checkoutResumeElement = null;
   const bypassCheckoutOnce = new WeakSet();
@@ -329,6 +329,8 @@
       if (!root || !root.isConnected || !upload.isConnected || key!==fields.map(f=>f.value).join('|')) {
         uploadStatus('changed-during-generation'); return;
       }
+      checkoutPreviewBlob = blob;
+      checkoutPreviewKey = key;
       const file=new File([blob],'HARZWORKS_LICHTENSTEIN40_Gravurvorschau.png',{type:'image/png'});
       const transfer=new DataTransfer(); transfer.items.add(file);
       upload.files=transfer.files;
@@ -351,12 +353,12 @@
     uploadTimer=setTimeout(attachPreview,900);
   }
 
-  // V21 checkout question. The existing Ecwid cart/check-out remains in charge:
+  // V22 add-to-cart question. The existing Ecwid cart/check-out remains in charge:
   // it is only resumed after a customer choice. No order is submitted by this code.
   function ensureCheckoutModalStyle() {
-    if (document.getElementById('hw-l40-checkout-style-v21')) return;
+    if (document.getElementById('hw-l40-checkout-style-v22')) return;
     const style = document.createElement('style');
-    style.id = 'hw-l40-checkout-style-v21';
+    style.id = 'hw-l40-checkout-style-v22';
     style.textContent = `
       .hw-l40-save-backdrop{position:fixed;inset:0;z-index:2147483600;background:rgba(13,15,14,.64);display:flex;align-items:center;justify-content:center;padding:20px;box-sizing:border-box}
       .hw-l40-save-dialog{position:relative;box-sizing:border-box;width:min(100%,450px);padding:34px 30px 26px;background:#f8f6f1;border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,.35);color:#27231e;font-family:Arial,Helvetica,sans-serif;text-align:center}
@@ -402,7 +404,7 @@
     backdrop.innerHTML = `
       <section class="hw-l40-save-dialog" role="dialog" aria-modal="true" aria-labelledby="hw-l40-save-title" aria-describedby="hw-l40-save-description">
         <h2 id="hw-l40-save-title">Deinen Entwurf speichern?</h2>
-        <p id="hw-l40-save-description">Möchtest du deine persönliche Gravurvorschau als Bild speichern, bevor es zur Kasse geht?</p>
+        <p id="hw-l40-save-description">Möchtest du deine persönliche Gravurvorschau als Bild speichern, bevor du zum Warenkorb weitergehst?</p>
         <button type="button" class="hw-l40-save-primary">Ja, Entwurf speichern</button>
         <button type="button" class="hw-l40-save-secondary">Ohne Speichern weiter</button>
         <p class="hw-l40-save-note">Dein Entwurf wird unabhängig davon mit der Bestellung an HARZWORKS übermittelt.</p>
@@ -431,21 +433,44 @@
     backdrop.addEventListener('keydown', stopKeys);
     backdrop.querySelector('.hw-l40-save-primary').focus();
   }
-  document.addEventListener('click', e => {
-    if (!checkoutPreviewBlob || checkoutModalOpen || !e.isTrusted) return;
+  // V22: Ask BEFORE adding the personalized clock to the cart.
+  // Ecwid navigates straight to the cart after this product's button is clicked.
+  document.addEventListener('click', async e => {
+    if (checkoutModalOpen || !e.isTrusted || !onProduct()) return;
     const el = e.target && e.target.closest && e.target.closest('button,a,input[type="submit"],[role="button"]');
     if (!el || el.closest('.hw-l40-save-backdrop')) return;
     if (bypassCheckoutOnce.has(el)) { bypassCheckoutOnce.delete(el); return; }
     const text = (el.innerText || el.value || el.getAttribute('aria-label') || '').trim();
     const cssId = ((el.id || '') + ' ' + (typeof el.className === 'string' ? el.className : '')).toLowerCase();
-    const isCheckout = /^(zur\s+kasse|zur\s+bezahlung|checkout|proceed\s+to\s+checkout|weiter\s+zur\s+kasse)(\s*[→›>]*)?$/i.test(text)
-      || (/(checkout|goto.?checkout)/.test(cssId) && !/paypal|apple.?pay|google.?pay/.test(cssId));
-    if (!isCheckout) return;
-    // Never intercept payment/submit actions from a checkout already in progress.
-    if (/checkout|checkouta/i.test(location.href) && !/cart|warenkorb/i.test(location.href)) return;
+    const isAddToCart = /^(in\s+den\s+warenkorb|add\s+to\s+(?:the\s+)?cart)(?:\s*[→›>]*)?$/i.test(text)
+      || /(?:add.?to.?bag|add.?to.?cart|form-control__button--add)/.test(cssId);
+    if (!isAddToCart || fields.length !== 3 || fields.some(f => !tidy(f.value))) return;
     e.preventDefault();
     e.stopPropagation();
     e.stopImmediatePropagation();
+    // Keep the original Ecwid button and its validation / cart process untouched.
+    // In particular: never proceed automatically if PNG export fails.
+    const key = fields.map(f => f.value).join('|');
+    if (!checkoutPreviewBlob || checkoutPreviewKey !== key) {
+      try {
+        uploadStatus('preparing-download');
+        checkoutPreviewBlob = await drawPreviewPng();
+        checkoutPreviewKey = key;
+      } catch (err) {
+        console.warn('[HARZWORKS] Downloadvorschau nicht verfügbar:', err);
+        uploadStatus('download-error', String(err));
+        bypassCheckoutOnce.add(el);
+        if (el.isConnected) el.click();
+        return;
+      }
+    }
+    // Stop if the user has changed the personalisation during PNG generation.
+    if (!el.isConnected || !onProduct()) return;
+    if (key !== fields.map(f => f.value).join('|')) {
+      checkoutPreviewBlob = null;
+      checkoutPreviewKey = '';
+      return;
+    }
     showCheckoutSaveModal(el);
   }, true);
 
